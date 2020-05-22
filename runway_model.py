@@ -61,8 +61,6 @@ def generate(model, inputs):
 	#Green-screen background
 	back_img20=np.zeros(back_img10.shape); back_img20[...,0]=120; back_img20[...,1]=255; back_img20[...,2]=155;
 
-	print(bgr_img)
-
 	## create the multi-frame
 	multi_fr_w=np.zeros((bgr_img.shape[0],bgr_img.shape[1],4))
 	multi_fr_w[...,0] = cv2.cvtColor(bgr_img,cv2.COLOR_BGR2GRAY)
@@ -71,6 +69,12 @@ def generate(model, inputs):
 	multi_fr_w[...,3] = multi_fr_w[...,0]
 
 	#crop tightly
+	print('-----------------')
+	print(bgr_img.shape)
+	print(bgr_img)
+	print('-----------------')
+	print(rcnn.shape)
+	print(rcnn)
 	bgr_img0=bgr_img
 	bbox=get_bbox(rcnn,R=bgr_img0.shape[0],C=bgr_img0.shape[1])
 
