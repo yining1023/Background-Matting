@@ -60,6 +60,7 @@ def alignImages(im1, im2,masksDL):
 	im1Reg[mask_rep,1]=im2[mask_rep,1]
 	im1Reg[mask_rep,2]=im2[mask_rep,2]
 
+	masksDL = masksDL.reshape(width, height)
 	mask_rep1=np.logical_and(mask_rep , masksDL[...,0]==255)
 
 	im1Reg[mask_rep1,0]=im1[mask_rep1,0]
@@ -68,35 +69,6 @@ def alignImages(im1, im2,masksDL):
 
 
 	return im1Reg
-
-
-def adjustExposure(img,back,mask):
-	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-	mask = cv2.dilate(mask, kernel, iterations=10)
-	mask1 = cv2.dilate(mask, kernel, iterations=300)
-	msk=mask1.astype(np.float32)/255-mask.astype(np.float32)/255; msk=msk.astype(np.bool)
-
-	back_tr=back
-	back_tr[...,0]=bias_gain(img[...,0],back[...,0],msk)
-	back_tr[...,1]=bias_gain(img[...,1],back[...,1],msk)
-	back_tr[...,2]=bias_gain(img[...,2],back[...,2],msk)
-
-	return back_tr
-
-
-def bias_gain(orgR,capR,cap_mask):
-	capR=capR.astype('float32')
-	orgR=orgR.astype('float32')
-
-	xR=capR[cap_mask]
-	yR=orgR[cap_mask]
-
-	gainR=np.nanstd(yR)/np.nanstd(xR);
-	biasR=np.nanmean(yR)-gainR*np.nanmean(xR);
-
-	cap_tran=capR*gainR+biasR;
-
-	return cap_tran.astype('float32')
 
 @runway.setup(options={'checkpoint': runway.file(extension='.pth')})
 def setup(opts):
