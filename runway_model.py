@@ -18,22 +18,22 @@ torch.set_num_threads(1)
 
 @runway.setup(options={'checkpoint': runway.file(extension='.pth')})
 def setup(opts):
-    print('begining of setup')
-    #initialize network
-    netM=ResnetConditionHR(input_nc=(3,3,1,4),output_nc=4,n_blocks1=7,n_blocks2=3)
-    netM=nn.DataParallel(netM)
-    checkpoint_path = opts['checkpoint']
-    netM.load_state_dict(torch.load(checkpoint_path))
-    netM.cuda(); netM.eval()
-    cudnn.benchmark=True
-    print('end of setup')
-    return netM
+	print('begining of setup')
+	#initialize network
+	netM=ResnetConditionHR(input_nc=(3,3,1,4),output_nc=4,n_blocks1=7,n_blocks2=3)
+	netM=nn.DataParallel(netM)
+	checkpoint_path = opts['checkpoint']
+	netM.load_state_dict(torch.load(checkpoint_path))
+	netM.cuda(); netM.eval()
+	cudnn.benchmark=True
+	print('end of setup')
+	return netM
 
 inputs = {
-    'input_subject': runway.image(description='An input image with the subject.'),
-    'input_background': runway.image(description='The background of the input image without the subject.'),
-    'input_segmentation': runway.image(description='Segmentation image of the input image', channels=1),
-    'target_background': runway.image(description='Target background image'),
+	'input_subject': runway.image(description='An input image with the subject.'),
+	'input_background': runway.image(description='The background of the input image without the subject.'),
+	'input_segmentation': runway.image(description='Segmentation image of the input image', channels=1),
+	'target_background': runway.image(description='Target background image'),
 }
 
 @runway.command('generate', inputs=inputs, outputs={'output': runway.image})
