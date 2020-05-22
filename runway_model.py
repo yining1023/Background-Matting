@@ -52,6 +52,12 @@ def generate(model, inputs):
     input_segmentation = inputs['input_segmentation']
     rcnn = np.array(input_segmentation)
 
+    #target background path
+    target_background = inputs['target_background']
+	back_img10=np.array(target_background); back_img10=cv2.cvtColor(back_img10,cv2.COLOR_BGR2RGB);
+	#Green-screen background
+	back_img20=np.zeros(back_img10.shape); back_img20[...,0]=120; back_img20[...,1]=255; back_img20[...,2]=155;
+
     ## create the multi-frame
     multi_fr_w=np.zeros((bgr_img.shape[0],bgr_img.shape[1],4))
     multi_fr_w[...,0] = cv2.cvtColor(bgr_img,cv2.COLOR_BGR2GRAY)
