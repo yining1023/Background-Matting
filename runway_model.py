@@ -60,7 +60,7 @@ def alignImages(im1, im2,masksDL):
 	im1Reg[mask_rep,1]=im2[mask_rep,1]
 	im1Reg[mask_rep,2]=im2[mask_rep,2]
 
-	masksDL = masksDL.reshape(width, height)
+	masksDL = masksDL.reshape(im1.shape[0], im1.shape[1])
 	mask_rep1=np.logical_and(mask_rep , masksDL[...,0]==255)
 
 	im1Reg[mask_rep1,0]=im1[mask_rep1,0]
