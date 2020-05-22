@@ -25,9 +25,7 @@ def setup(opts):
     netM.load_state_dict(torch.load(checkpoint_path))
     netM.cuda(); netM.eval()
     cudnn.benchmark=True
-    reso=(512,512) #input reoslution to the network
-
-    return generator, kp_detector, fa, checkpoint_name
+    return netM
 
 inputs = {
     'input_subject': runway.image(description='An input image with the subject.'),
@@ -38,6 +36,8 @@ inputs = {
 
 @runway.command('generate', inputs=inputs, outputs={'output': runway.image})
 def generate(model, inputs):
+    netM = model
+    reso=(512,512) #input reoslution to the network
     # original input image
     input_subject = inputs['input_subject']
     bgr_img = np.array(input_subject)
