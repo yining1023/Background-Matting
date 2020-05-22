@@ -8,3 +8,5 @@ tqdm
 tensorboardX
 tensorflow-gpu==1.14.0
 runway-python
+torch==1.1.0
+torchvision
