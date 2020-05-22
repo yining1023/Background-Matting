@@ -17,7 +17,7 @@ torch.set_num_threads(1)
 
 def alignImages(im1, im2,masksDL):
 	MAX_FEATURES = 500
-    GOOD_MATCH_PERCENT = 0.15
+	GOOD_MATCH_PERCENT = 0.15
 
 	# Convert images to grayscale
 	im1Gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
