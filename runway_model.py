@@ -32,7 +32,7 @@ def setup(opts):
 inputs = {
     'input_subject': runway.image(description='An input image with the subject.'),
     'input_background': runway.image(description='The background of the input image without the subject.'),
-    'input_segmentation': runway.image(description='Segmentation image of the input image'),
+    'input_segmentation': runway.image(description='Segmentation image of the input image', channels=1),
     'target_background': runway.image(description='Target background image'),
 }
 
@@ -71,10 +71,10 @@ def generate(model, inputs):
 	#crop tightly
 	print('-----------------')
 	print(bgr_img.shape)
-	print(bgr_img)
+	# print(bgr_img)
 	print('-----------------')
 	print(rcnn.shape)
-	print(rcnn)
+	# print(rcnn)
 	bgr_img0=bgr_img
 	bbox=get_bbox(rcnn,R=bgr_img0.shape[0],C=bgr_img0.shape[1])
 
