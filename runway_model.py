@@ -14,7 +14,7 @@ from functions import *
 from networks import ResnetConditionHR
 
 torch.set_num_threads(1)
-print('CUDA Device: ' + os.environ["CUDA_VISIBLE_DEVICES"])
+#print('CUDA Device: ' + os.environ["CUDA_VISIBLE_DEVICES"])
 
 @runway.setup(options={'checkpoint': runway.file(extension='.pth')})
 def setup(opts):
