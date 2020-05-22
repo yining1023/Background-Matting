@@ -14,7 +14,87 @@ from functions import *
 from networks import ResnetConditionHR
 
 torch.set_num_threads(1)
-#print('CUDA Device: ' + os.environ["CUDA_VISIBLE_DEVICES"])
+
+def alignImages(im1, im2,masksDL):
+
+	# Convert images to grayscale
+	im1Gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
+	im2Gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
+
+	akaze = cv2.AKAZE_create()
+	keypoints1, descriptors1 = akaze.detectAndCompute(im1, None)
+	keypoints2, descriptors2 = akaze.detectAndCompute(im2, None)
+	
+	# Match features.
+	matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE)
+	matches = matcher.match(descriptors1, descriptors2, None)
+	
+	# Sort matches by score
+	matches.sort(key=lambda x: x.distance, reverse=False)
+
+	# Remove not so good matches
+	numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+	matches = matches[:numGoodMatches]
+	
+	# Extract location of good matches
+	points1 = np.zeros((len(matches), 2), dtype=np.float32)
+	points2 = np.zeros((len(matches), 2), dtype=np.float32)
+
+	for i, match in enumerate(matches):
+		points1[i, :] = keypoints1[match.queryIdx].pt
+		points2[i, :] = keypoints2[match.trainIdx].pt
+	
+	# Find homography
+	h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
+
+	# Use homography
+	height, width, channels = im2.shape
+	im1Reg = cv2.warpPerspective(im1, h, (width, height))
+	# copy image in the empty region, unless it is a foreground. Then copy background
+
+	mask_rep=(np.sum(im1Reg.astype('float32'),axis=2)==0)
+
+	im1Reg[mask_rep,0]=im2[mask_rep,0]
+	im1Reg[mask_rep,1]=im2[mask_rep,1]
+	im1Reg[mask_rep,2]=im2[mask_rep,2]
+
+	mask_rep1=np.logical_and(mask_rep , masksDL[...,0]==255)
+
+	im1Reg[mask_rep1,0]=im1[mask_rep1,0]
+	im1Reg[mask_rep1,1]=im1[mask_rep1,1]
+	im1Reg[mask_rep1,2]=im1[mask_rep1,2]
+
+
+	return im1Reg
+
+
+def adjustExposure(img,back,mask):
+	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+	mask = cv2.dilate(mask, kernel, iterations=10)
+	mask1 = cv2.dilate(mask, kernel, iterations=300)
+	msk=mask1.astype(np.float32)/255-mask.astype(np.float32)/255; msk=msk.astype(np.bool)
+
+	back_tr=back
+	back_tr[...,0]=bias_gain(img[...,0],back[...,0],msk)
+	back_tr[...,1]=bias_gain(img[...,1],back[...,1],msk)
+	back_tr[...,2]=bias_gain(img[...,2],back[...,2],msk)
+
+	return back_tr
+
+
+def bias_gain(orgR,capR,cap_mask):
+	capR=capR.astype('float32')
+	orgR=orgR.astype('float32')
+
+	xR=capR[cap_mask]
+	yR=orgR[cap_mask]
+
+	gainR=np.nanstd(yR)/np.nanstd(xR);
+	biasR=np.nanmean(yR)-gainR*np.nanmean(xR);
+
+	cap_tran=capR*gainR+biasR;
+
+	return cap_tran.astype('float32')
 
 @runway.setup(options={'checkpoint': runway.file(extension='.pth')})
 def setup(opts):
@@ -43,17 +123,19 @@ def generate(model, inputs):
 	reso=(512,512) #input reoslution to the network
 	# original input image
 	input_subject = inputs['input_subject']
-	bgr_img = np.array(input_subject)
-	bgr_img = cv2.cvtColor(bgr_img,cv2.COLOR_BGR2RGB)
-
-	# captured background image
-	input_background = inputs['input_background']
-	bg_im0=np.array(input_background)
-	bg_im0=cv2.cvtColor(bg_im0,cv2.COLOR_BGR2RGB)
+	input_subject = np.array(input_subject)
+	bgr_img = cv2.cvtColor(input_subject,cv2.COLOR_BGR2RGB)
 
 	# segmentation mask
 	input_segmentation = inputs['input_segmentation']
 	rcnn = np.array(input_segmentation)
+
+	# captured background image
+	input_background = inputs['input_background']
+	bg_im0=np.array(input_background)
+	# align captured background image with input image and mask image
+	bg_im0 = alignImages(bg_im0, input_subject, rcnn)
+	bg_im0=cv2.cvtColor(bg_im0,cv2.COLOR_BGR2RGB)
 
 	#target background path
 	target_background = inputs['target_background']
@@ -69,12 +151,6 @@ def generate(model, inputs):
 	multi_fr_w[...,3] = multi_fr_w[...,0]
 
 	#crop tightly
-	print('-----------------')
-	print(bgr_img.shape)
-	# print(bgr_img)
-	print('-----------------')
-	print(rcnn.shape)
-	# print(rcnn)
 	bgr_img0=bgr_img
 	bbox=get_bbox(rcnn,R=bgr_img0.shape[0],C=bgr_img0.shape[1])
 
@@ -83,7 +159,6 @@ def generate(model, inputs):
 	bgr_img=crop_list[0]; bg_im=crop_list[1]
 	rcnn=crop_list[2]; back_img1=crop_list[3]; back_img2=crop_list[4]; multi_fr=crop_list[5]
 
-	print('process segmentation mask')
 	#process segmentation mask
 	kernel_er = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 	kernel_dil = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
@@ -104,7 +179,6 @@ def generate(model, inputs):
 	rcnn=(255*rcnn).astype(np.uint8)
 	rcnn=np.delete(rcnn, range(reso[0],reso[0]+K), 0)
 
-	print('convert to torch')
 	#convert to torch
 	img=torch.from_numpy(bgr_img.transpose((2, 0, 1))).unsqueeze(0); img=2*img.float().div(255)-1
 	bg=torch.from_numpy(bg_im.transpose((2, 0, 1))).unsqueeze(0); bg=2*bg.float().div(255)-1
@@ -143,7 +217,6 @@ def generate(model, inputs):
 		alpha_out0=uncrop(alpha_out,bbox,R0,C0)
 		fg_out0=uncrop(fg_out,bbox,R0,C0)
 
-	print('compose')
 	#compose
 	back_img10=cv2.resize(back_img10,(C0,R0)); back_img20=cv2.resize(back_img20,(C0,R0))
 	comp_im_tr1=composite4(fg_out0,back_img10,alpha_out0)
