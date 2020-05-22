@@ -34,7 +34,10 @@ def compose_image_withshift(alpha_pred,fg_pred,bg,seg):
     return torch.autograd.Variable(image_sh.cuda())
 
 def get_bbox(mask,R,C):
+    print(mask.shape)
     where = np.array(np.where(mask))
+    print(where.shape)
+    print(np.amin(where, axis=1))
     x1, y1 = np.amin(where, axis=1)
     x2, y2 = np.amax(where, axis=1)
 
