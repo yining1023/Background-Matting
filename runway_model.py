@@ -94,7 +94,6 @@ def generate(model, inputs):
 	input_subject = inputs['input_subject']
 	input_subject = np.array(input_subject)
 	bgr_img = input_subject
-	# bgr_img = cv2.cvtColor(input_subject,cv2.COLOR_BGR2RGB)
 
 	# segmentation mask
 	input_segmentation_3channels = np.array(inputs['input_segmentation'])
@@ -105,12 +104,10 @@ def generate(model, inputs):
 	bg_im0=np.array(input_background)
 	# align captured background image with input image and mask image
 	bg_im0 = alignImages(bg_im0, input_subject, input_segmentation_3channels)
-	# bg_im0=cv2.cvtColor(bg_im0,cv2.COLOR_BGR2RGB)
 
 	#target background path
 	target_background = inputs['target_background']
 	back_img10=np.array(target_background)
-	# back_img10=cv2.cvtColor(back_img10,cv2.COLOR_BGR2RGB)
 	#Green-screen background
 	back_img20=np.zeros(back_img10.shape); back_img20[...,0]=120; back_img20[...,1]=255; back_img20[...,2]=155;
 
@@ -193,9 +190,7 @@ def generate(model, inputs):
 	comp_im_tr1=composite4(fg_out0,back_img10,alpha_out0)
 	comp_im_tr2=composite4(fg_out0,back_img20,alpha_out0)
 
-	return comp_im_tr1
-	# out = cv2.cvtColor(comp_im_tr1,cv2.COLOR_BGR2RGB)
-	# return out
+	return comp_im_tr1xw
 
 if __name__ == '__main__':
 	runway.run(port=8888, model_options={'checkpoint': './real-fixed-cam.pth'})
