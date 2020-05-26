@@ -38,8 +38,8 @@ def get_bbox(mask,R,C):
     where = np.array(np.where(mask))
     print(where.shape)
     print(np.amin(where, axis=1))
-    x1, y1, _ = np.amin(where, axis=1)
-    x2, y2, _ = np.amax(where, axis=1)
+    x1, y1 = np.amin(where, axis=1)
+    x2, y2 = np.amax(where, axis=1)
 
     bbox_init=[x1,y1,np.maximum(x2-x1,y2-y1),np.maximum(x2-x1,y2-y1)]
 
