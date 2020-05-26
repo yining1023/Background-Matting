@@ -190,7 +190,7 @@ def generate(model, inputs):
 	comp_im_tr1=composite4(fg_out0,back_img10,alpha_out0)
 	comp_im_tr2=composite4(fg_out0,back_img20,alpha_out0)
 
-	return comp_im_tr1xw
+	return comp_im_tr1
 
 if __name__ == '__main__':
 	runway.run(port=8888, model_options={'checkpoint': './real-fixed-cam.pth'})
