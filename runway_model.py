@@ -97,7 +97,7 @@ def generate(model, inputs):
 	# bgr_img = cv2.cvtColor(input_subject,cv2.COLOR_BGR2RGB)
 
 	# segmentation mask
-	input_segmentation_3channels = np.array(input_segmentation_3channels)
+	input_segmentation_3channels = np.array(inputs['input_segmentation'])
 	rcnn = cv2.cvtColor(input_segmentation_3channels,cv2.COLOR_RGB2GRAY)
 
 	# captured background image
