@@ -60,19 +60,16 @@ def alignImages(im1, im2,masksDL):
 	im1Reg[mask_rep,1]=im2[mask_rep,1]
 	im1Reg[mask_rep,2]=im2[mask_rep,2]
 
-	masksDL = masksDL.reshape(im1.shape[0], im1.shape[1])
 	mask_rep1=np.logical_and(mask_rep , masksDL[...,0]==255)
 
 	im1Reg[mask_rep1,0]=im1[mask_rep1,0]
 	im1Reg[mask_rep1,1]=im1[mask_rep1,1]
 	im1Reg[mask_rep1,2]=im1[mask_rep1,2]
 
-
 	return im1Reg
 
 @runway.setup(options={'checkpoint': runway.file(extension='.pth')})
 def setup(opts):
-	print('begining of setup')
 	#initialize network
 	netM=ResnetConditionHR(input_nc=(3,3,1,4),output_nc=4,n_blocks1=7,n_blocks2=3)
 	netM=nn.DataParallel(netM)
@@ -80,19 +77,17 @@ def setup(opts):
 	netM.load_state_dict(torch.load(checkpoint_path))
 	netM.cuda(); netM.eval()
 	cudnn.benchmark=True
-	print('end of setup')
 	return netM
 
 inputs = {
 	'input_subject': runway.image(description='An input image with the subject.'),
 	'input_background': runway.image(description='The background of the input image without the subject.'),
-	'input_segmentation': runway.image(description='Segmentation image of the input image', channels=1),
+	'input_segmentation': runway.image(description='Segmentation image of the input image'),
 	'target_background': runway.image(description='Target background image'),
 }
 
 @runway.command('generate', inputs=inputs, outputs={'output': runway.image})
 def generate(model, inputs):
-	print('begining of generate')
 	netM = model
 	reso=(512,512) #input reoslution to the network
 	# original input image
@@ -197,7 +192,6 @@ def generate(model, inputs):
 	comp_im_tr2=composite4(fg_out0,back_img20,alpha_out0)
 
 	out = cv2.cvtColor(comp_im_tr1,cv2.COLOR_BGR2RGB)
-	print('end of generate')
 	return out
 
 if __name__ == '__main__':

@@ -117,12 +117,6 @@ for i in range(0,len(test_imgs)):
 
 		
 	#crop tightly
-	print('-----------------')
-	print(bgr_img.shape)
-	print(bgr_img)
-	print('-----------------')
-	print(rcnn.shape)
-	print(rcnn)
 	bgr_img0=bgr_img;
 	bbox=get_bbox(rcnn,R=bgr_img0.shape[0],C=bgr_img0.shape[1])
 
