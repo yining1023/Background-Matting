@@ -193,8 +193,9 @@ def generate(model, inputs):
 	comp_im_tr1=composite4(fg_out0,back_img10,alpha_out0)
 	comp_im_tr2=composite4(fg_out0,back_img20,alpha_out0)
 
-	out = cv2.cvtColor(comp_im_tr1,cv2.COLOR_BGR2RGB)
-	return out
+	return comp_im_tr1
+	# out = cv2.cvtColor(comp_im_tr1,cv2.COLOR_BGR2RGB)
+	# return out
 
 if __name__ == '__main__':
 	runway.run(port=8888, model_options={'checkpoint': './real-fixed-cam.pth'})
